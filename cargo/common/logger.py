@@ -18,7 +18,7 @@ class ColoredFormatter(logging.Formatter):
 
 def init_logger(name, log_level=logging.INFO, logfile=None, propagate=False, **kwargs):
     logger = logging.getLogger(name)
-    log_format = "[%(levelname)s %(name)s %(funcName)s] %(asctime)s - %(message)s"
+    log_format = "[%(levelname)s %(name)s] %(asctime)s %(funcName)s() - %(message)s"
     formatter = ColoredFormatter(log_format)
 
     # Add file file handler
