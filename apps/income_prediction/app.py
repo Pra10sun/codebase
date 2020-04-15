@@ -7,6 +7,24 @@ import pandas as pd
 from decouple import config
 import os
 import numpy as np
+import pickle
+
+# modeling_features = []
+modeling_features = [
+      # "price_n-1",
+      "is_non_operating_expense_n-1",
+      "earnings_per_share_diluted_n-1",
+      "cf_cash_at_period_end_n-1",
+      "return_on_capital_n-1",
+      # "return_on_assets_n-1",
+      "return_on_tangible_assets_n-1",
+      "operating_margin_n-1",
+      "free_cash_flow_to_earnings_n-1",
+      "dividends_to_earnings_n-1",
+      # "price_to_earnings_n-1",
+      # "earnings_per_share_n-1",
+      "eps_growth_n-1"
+]
 
 
 def increment_field(df, column, value):
@@ -27,7 +45,7 @@ class App(BaseHelpers):
         self.y = None  # target variable
         self.X = None  # Features
         self.model_params = {
-            'estimator__n_estimators': [100, 200],
+            'estimator__n_estimators': [100],
             # 'criterion': ['gini'],
             # 'max_depth': [None],
             # 'min_samples_leaf': [1],
@@ -53,6 +71,11 @@ class App(BaseHelpers):
         path = (os.path.join(config('PYTHONPATH'), 'data/master.csv'))
         self.log.info(f'Loading data from {path}')
         self.df = pd.read_csv(path)
+        self.df.drop(columns=[
+            'row_number',
+            'ticker_id',
+            'Unnamed: 0',
+        ], inplace=True)
         self.log.info(f'Data has been loaded: {self.df.shape}')
 
     def concatenate(self):
@@ -164,8 +187,11 @@ class App(BaseHelpers):
 
     def select_features(self, X):
         """ Remove future values """
-        feature = [col for col in X if col[-2::] in ['-1', -2]]
-        return X[feature]
+        if len(modeling_features) > 0:
+            features = modeling_features
+        else:
+            features = [col for col in X if col[-2::] in ['-1', -2]]
+        return X[features]
 
     def train(self, X, y):
         gs = GroupGridSearchCV(
@@ -178,6 +204,7 @@ class App(BaseHelpers):
         ).fit(X, y)
         self.model = gs.best_estimator_
         print(self.model.feature_importance(X))
+        self.model.feature_importance(X).to_csv(os.path.join(config('PYTHONPATH'), 'cache/feature_importance.csv'))
 
     def evaluate(self, X, y):
         """ Generate evaluation metrics """
@@ -186,12 +213,15 @@ class App(BaseHelpers):
         for class_ in y:
             y_prob = y_probs[class_][:, 1]
             y_true = y[class_]
-            bcc = BinaryClassifierCurves(y_true=y_true, y_prob=y_prob)
+            bcc = BinaryClassifierCurves(y_true=y_true, y_prob=y_prob, log=self.log)
             bcc.make_all_plots()
             bcc.save_all_plots(key=os.path.join(config('PYTHONPATH'), 'cache'), prefix=f'class_{class_}')
             bcc.save_all_dfs(key=os.path.join(config('PYTHONPATH'), 'cache'), prefix=f'class_{class_}')
 
-    def run(self):
+    def save_model(self):
+        pickle.dump(self.model.estimators_[4], open(os.path.join(config('PYTHONPATH'), 'cache/model.sav'), 'wb'))
+
+    def run(self, save):
         self.load_data()
         df = self.concatenate()
         df = self.generate_growth(df, save=False)
@@ -201,7 +231,9 @@ class App(BaseHelpers):
         X_test, y_test = self.pre_process(self.df_holdout)
         self.train(X, y)
         self.evaluate(X_test, y_test)
+        if save:
+            self.save_model()
 
 
 if __name__ == '__main__':
-    App(log_level='INFO').run()
+    App(log_level='INFO').run(save=True)
