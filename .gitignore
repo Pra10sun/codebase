@@ -6,6 +6,7 @@ __pycache__/
 .html
 
 # Custom
+.DS_Store
 .csv
 cache/
 Assets/
@@ -133,3 +134,4 @@ dmypy.json
 # custom
 .temp
 /cache/
+/notebooks/
