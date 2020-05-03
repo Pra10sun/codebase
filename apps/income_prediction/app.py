@@ -12,7 +12,7 @@ import pickle
 # modeling_features = []
 modeling_features = [
       # "price_n-1",
-      "is_non_operating_expense_n-1",
+      # "is_non_operating_expense_n-1",
       "earnings_per_share_diluted_n-1",
       "cf_cash_at_period_end_n-1",
       "return_on_capital_n-1",
@@ -68,7 +68,7 @@ class App(BaseHelpers):
 
     def load_data(self):
         """ Load data into RAM """
-        path = (os.path.join(config('PYTHONPATH'), 'data/master.csv'))
+        path = (os.path.join(config('PYTHONPATH'), 'apps/income_prediction/data/master.csv'))
         self.log.info(f'Loading data from {path}')
         self.df = pd.read_csv(path)
         self.df.drop(columns=[

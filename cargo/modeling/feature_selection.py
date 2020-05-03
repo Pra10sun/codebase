@@ -1,5 +1,5 @@
 from cargo.common import BaseHelpers
-from sklearn.metrics import log_loss, roc_auc_score
+from sklearn.metrics import roc_auc_score
 import numpy as np
 from decouple import config
 import json
@@ -28,6 +28,7 @@ class IterativeFeatureSelector(BaseHelpers):
         drop_features_all = []
 
         model = self.Model(**self.model_params)
+        self.log.info(f'Model has been assembled: {model}')
         model.fit(X=self.X_train, y=self.y_train)
         baseline_performance = self.get_score(model=model, X=self.X_valid, y=self.y_valid)
         current_performance = baseline_performance
