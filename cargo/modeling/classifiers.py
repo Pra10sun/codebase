@@ -29,7 +29,7 @@ class DecisionTreeClassifier(TreeMethods, SklearnDecisionTreeClassifier):
     def __init__(self, **kwargs):
         super(DecisionTreeClassifier, self).__init__(**kwargs)
 
-    def visualize(self, feature_names, **kwargs):
+    def visualize(self, feature_names, save_to=False, **kwargs):
         """ Visualize the tree """
         dot_data = export_graphviz(
             self,
@@ -78,6 +78,8 @@ class DecisionTreeClassifier(TreeMethods, SklearnDecisionTreeClassifier):
                 dest = graph.get_node(str(edges[edge][i]))[0]
                 update_color(dest)
 
+        if save_to:
+            graph.write_png(save_to)
         return Image(graph.create_png())
 
 
